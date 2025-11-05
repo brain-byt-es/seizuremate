@@ -1,0 +1,55 @@
+{
+  "name": "SeizureMate Brand System",
+  "version": "1.0.0",
+  "description": "Unified brand intelligence system for SeizureMate — a calm, clinically aligned seizure management platform. Includes voice, tone, design, storytelling, accessibility, and product launch strategy.",
+  "context": {
+    "system": {
+      "brand-blueprint": "./brand/system/brand-blueprint.md",
+      "brand-system-overview": "./brand/system/brand-system-overview.md",
+      "ideal-client-profile": "./brand/system/ideal-client-profile(ICP).md",
+      "offer-stack": "./brand/system/offer-stack.md",
+      "business-profile": "./brand/system/business-profile.md"
+    },
+    "design": {
+      "design-system-specs": "./brand/design/design-system-specs(UI Kit).md",
+      "app-interface-mood-board": "./brand/design/app-interface-mood-board.md",
+      "brand-visual-board": "./brand/design/brand-visual-board.md",
+      "data-visualization-board": "./brand/design/data-visualization-board.md",
+      "mood-texture-board": "./brand/design/mood-texture-board.md"
+    },
+    "content": {
+      "voice-and-tone-guide": "./brand/content/voice-and-tone-guide.md",
+      "microcopy-UX-writing-guide": "./brand/content/microcopy-UX-writing-guide.md",
+      "content-storytelling-playbook": "./brand/content/content-storytelling-playbook.md",
+      "accessibility-inclusive-design-manual": "./brand/content/accessibility-inclusive-design-manual.md",
+      "clinical-brand-alignment": "./brand/content/clinical-brand-alignment.md"
+    },
+    "strategy": {
+      "app-launch-community-plan": "./brand/strategy/app-launch-community-plan.md"
+    }
+  },
+  "ai_instructions": {
+    "purpose": "Ensure every output — from copy to UI — follows SeizureMate’s calm, clinically trusted brand system.",
+    "style_rules": [
+      "Use calm, clear, and encouraging tone (per voice-and-tone-guide).",
+      "Maintain accessibility, contrast, and readability per design-system-specs.",
+      "Use inclusive, non-alarming, and empathetic language (per accessibility-inclusive-design-manual).",
+      "Prioritize human-first clarity and emotional calm over marketing hype.",
+      "Follow Confident Calm palette and spacing structure for visuals.",
+      "All copy should feel reassuring, clear, and human — no exclamation marks."
+    ],
+    "audience": "Individuals managing focal seizures, caregivers, and clinicians seeking calm, data-informed tracking tools.",
+    "usage_examples": {
+      "prompt_brand_copy": "Write onboarding microcopy following voice-and-tone-guide and microcopy-UX-writing-guide.",
+      "prompt_ui_design": "Design a calm, tactile dashboard using colors and component specs from design-system-specs(UI Kit).md.",
+      "prompt_strategy": "Generate a caregiver outreach email aligned with the content-storytelling-playbook and business-profile."
+    }
+  },
+  "metadata": {
+    "maintainer": "SeizureMate Brand Team",
+    "last_updated": "2025-11-05",
+    "repository": "https://github.com/seizuremate/app",
+    "language": "en",
+    "license": "Proprietary – internal brand documentation only"
+  }
+}
