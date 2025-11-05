@@ -1,0 +1,7 @@
+<type>(scope): short summary in sentence case
+
+Body (why + context)
+- bullets if helpful
+- references, trade-offs
+
+Refs: #issue

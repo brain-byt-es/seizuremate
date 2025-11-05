@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -e
+echo "▶ Running tests..."
+npm run test:prepush
+echo "▶ Building (optional)..."
+npm run build:prepush
