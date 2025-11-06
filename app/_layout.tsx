@@ -1,10 +1,11 @@
-import { LogsProvider } from '@/constants/LogsContext';
 import { getTheme } from '@/constants/theme';
+import { LogsProvider } from '@/contexts/LogsContext';
+import { OnboardingProvider } from '@/contexts/OnboardingContext';
 import { supabase } from '@/lib/supabase';
 import { ClerkProvider, useAuth } from '@clerk/clerk-expo';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { SplashScreen, Stack, useRouter } from 'expo-router';
+import { Href, SplashScreen, Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { useColorScheme } from 'react-native';
@@ -19,14 +20,15 @@ if (!clerkPublishableKey) {
   throw new Error('Missing Clerk Publishable Key. Please set EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY in your .env file.');
 }
 
-function InitialLayout() {
+function RootLayoutNav() {
   const colorScheme = useColorScheme();
   const router = useRouter();
-  const { isSignedIn, isLoaded, userId, getToken } = useAuth();
+  const { isSignedIn, isLoaded, userId } = useAuth();
 
   const [isStorageLoading, setStorageLoading] = useState(true);
   const [hasSeenIntro, setHasSeenIntro] = useState(false);
   const [hasOnboarded, setHasOnboarded] = useState(false);
+  const { isSupabaseReady } = useAuthAndSupabase();
 
   useEffect(() => {
     const checkStorage = async () => {
@@ -34,7 +36,7 @@ function InitialLayout() {
         const seenIntro = await AsyncStorage.getItem('hasSeenIntro');
         setHasSeenIntro(seenIntro === 'true');
 
-        if (isLoaded && isSignedIn) {
+        if (isLoaded && isSignedIn && isSupabaseReady) {
           const { data: profile } = await supabase
             .from('users')
             .select('id')
@@ -52,52 +54,7 @@ function InitialLayout() {
     };
 
     checkStorage();
-  }, [isLoaded, isSignedIn, userId]);
-
-  useEffect(() => {
-    const setSupabaseSession = async () => {
-      if (isSignedIn) {
-        const supabaseToken = await getToken({ template: 'supabase' });
-        if (supabaseToken) {
-          await supabase.auth.setSession({
-            access_token: supabaseToken,
-            refresh_token: '', // Clerk handles the refresh token.
-          });
-        }
-      } else {
-        supabase.auth.signOut();
-      }
-    };
-
-    if (isLoaded) {
-      setSupabaseSession();
-    }
-  }, [isSignedIn, isLoaded, getToken]);
-
-  useEffect(() => {
-    if (isStorageLoading || !isLoaded) return;
-
-    console.log('Routing decision:', { isStorageLoading, hasSeenIntro, isLoaded, isSignedIn, hasOnboarded });
-
-    if (!hasSeenIntro) {
-      console.log('Redirecting to /welcome');
-      router.replace('/welcome');
-    } else if (isSignedIn) {
-      if (hasOnboarded) {
-        console.log('Redirecting to /(tabs)/today');
-        router.replace('/(tabs)/today');
-      } else {
-        console.log('Redirecting to /(onboarding)');
-        router.replace('/(onboarding)');
-      }
-    } else {
-      console.log('Redirecting to /(auth)/sign-in');
-      router.replace('/(auth)/sign-in');
-    }
-    
-    SplashScreen.hideAsync();
-
-  }, [isStorageLoading, hasSeenIntro, isLoaded, isSignedIn, hasOnboarded, router]);
+  }, [isLoaded, isSignedIn, userId, isSupabaseReady]);
 
   const appTheme = getTheme(colorScheme ?? 'light');
 
@@ -113,22 +70,89 @@ function InitialLayout() {
     },
   };
 
-  if (isStorageLoading || !isLoaded) {
+  useEffect(() => {
+    if (isStorageLoading || !isLoaded || !isSupabaseReady) {
+      return;
+    }
+
+    let destination: Href | null = null;
+
+    if (!hasSeenIntro) {
+      destination = '/welcome';
+    } else if (!isSignedIn) {
+      destination = '/(auth)/sign-in';
+    } else if (!hasOnboarded) {
+      destination = '/(onboarding)';
+    } else {
+      destination = '/(tabs)/today';
+    }
+
+    if (destination) {
+      router.replace(destination);
+    }
+  }, [isStorageLoading, hasSeenIntro, isLoaded, isSignedIn, hasOnboarded, isSupabaseReady, router]);
+
+  useEffect(() => {
+    if (!isStorageLoading && isLoaded) {
+      SplashScreen.hideAsync();
+    }
+  }, [isStorageLoading, isLoaded]);
+
+  if (isStorageLoading || !isLoaded || !isSupabaseReady) {
     return null;
   }
 
   return (
+    <ThemeProvider value={navigationTheme}>
+      <Stack>
+        <Stack.Screen name="(public)" options={{ headerShown: false }} />
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+      </Stack>
+      <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+    </ThemeProvider>
+  );
+}
+
+/**
+ * This hook centralizes the logic for setting up the Supabase session.
+ * It returns a boolean that is true only when the session is ready.
+ */
+export function useAuthAndSupabase() {
+  const { isSignedIn, isLoaded, getToken } = useAuth();
+  const [isSupabaseReady, setSupabaseReady] = useState(false);
+
+  useEffect(() => {
+    const setSupabaseSession = async () => {
+      if (isSignedIn) {
+        const supabaseToken = await getToken({ template: 'supabase' });
+        if (supabaseToken) {
+          await supabase.auth.setSession({
+            access_token: supabaseToken,
+            refresh_token: '', // Clerk handles the refresh token.
+          });
+          setSupabaseReady(true);
+        }
+      } else {
+        supabase.auth.signOut();
+        setSupabaseReady(false);
+      }
+    };
+
+    if (isLoaded) {
+      setSupabaseSession();
+    }
+  }, [isSignedIn, isLoaded, getToken]);
+
+  return { isSupabaseReady };
+}
+
+function InitialLayout() {
+  return (
     <LogsProvider>
-      <ThemeProvider value={navigationTheme}>
-        <Stack>
-          <Stack.Screen name="(public)" options={{ headerShown: false }} />
-          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-          <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-        </Stack>
-        <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
-      </ThemeProvider>
+      <RootLayoutNav />
     </LogsProvider>
   );
 }
@@ -136,7 +160,9 @@ function InitialLayout() {
 export default function RootLayout() {
   return (
     <ClerkProvider publishableKey={clerkPublishableKey!}>
-      <InitialLayout />
+      <OnboardingProvider>
+        <InitialLayout />
+      </OnboardingProvider>
     </ClerkProvider>
   );
 }

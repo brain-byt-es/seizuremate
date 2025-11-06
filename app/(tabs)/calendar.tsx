@@ -1,12 +1,19 @@
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Log as LogItem, useLogs } from '@/constants/LogsContext';
+import { useLogs } from '@/contexts/LogsContext';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { useAuth } from '@clerk/clerk-expo';
 import { MaterialIcons } from '@expo/vector-icons';
 import { addMonths, endOfMonth, format, getDaysInMonth, startOfMonth, subMonths } from 'date-fns';
-import React, { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAuthAndSupabase } from '../_layout';
 
 const FILTERS = ['All', 'Seizures', 'Symptoms', 'Meds'];
 
@@ -15,6 +22,8 @@ export default function CalendarScreen() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [activeFilter, setActiveFilter] = useState('All');
   const { logs, fetchLogs } = useLogs();
+  const { isSupabaseReady } = useAuthAndSupabase();
+  const { isLoaded, isSignedIn } = useAuth();
 
   const insets = useSafeAreaInsets();
   const backgroundColor = useThemeColor('background');
@@ -27,12 +36,30 @@ export default function CalendarScreen() {
   const borderColor = useThemeColor('border');
 
   useEffect(() => {
+    // Do not fetch until Clerk is loaded, the user is signed in, AND the Supabase session is ready.
+    if (!isLoaded || !isSignedIn || !isSupabaseReady) {
+      return;
+    }
+
     const firstDay = format(startOfMonth(currentDate), 'yyyy-MM-dd');
     const lastDay = format(endOfMonth(currentDate), 'yyyy-MM-dd');
-    fetchLogs(firstDay, lastDay);
-  }, [currentDate, fetchLogs]);
+    fetchLogs(firstDay, lastDay).catch((e) => {
+      // We can show a toast or a small inline error here in the future.
+      console.error("Failed to fetch logs for calendar:", e);
+    });
+  }, [currentDate, fetchLogs, isLoaded, isSignedIn, isSupabaseReady]);
 
-  const MOCK_LOGS = logs; // Use the live logs
+  // This is the key change: Transform the flat `logs` array into the grouped structure your UI expects.
+  const groupedLogs = useMemo(() => {
+    return logs.reduce((acc, log) => {
+      const dateKey = format(new Date(log.created_at), 'yyyy-MM-dd');
+      if (!acc[dateKey]) {
+        acc[dateKey] = [];
+      }
+      acc[dateKey].push(log);
+      return acc;
+    }, {} as Record<string, any[]>);
+  }, [logs]);
 
   const handlePrevMonth = () => {
     setCurrentDate((prevDate) => subMonths(prevDate, 1));
@@ -58,7 +85,7 @@ export default function CalendarScreen() {
     for (let day = 1; day <= daysInMonth; day++) {
       const dayDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
       const dateString = format(dayDate, 'yyyy-MM-dd');
-      const logsForDay = MOCK_LOGS[dateString];
+      const logsForDay = groupedLogs[dateString];
       const isSelected = format(selectedDate, 'yyyy-MM-dd') === dateString;
       const isToday = dateString === todayString;
 
@@ -66,10 +93,10 @@ export default function CalendarScreen() {
       let textStyle: object = { color: textColor };
 
       if (logsForDay) {
-        const seizureLog = logsForDay.find((log: LogItem) => log.type === 'seizure');
-        if (seizureLog && seizureLog.intensity) {
-          const opacity = Math.floor(seizureLog.intensity * 255).toString(16).padStart(2, '0');
-          dayStyle = { backgroundColor: `${primaryColor}${opacity}` };
+        const seizureLog = logsForDay.find((log) => log.type === 'seizure');
+        if (seizureLog && seizureLog.duration) { // Assuming intensity is now duration
+          const opacity = Math.min(1, (seizureLog.duration / 300)).toFixed(2); // Example: opacity based on duration up to 5 mins
+          dayStyle = { backgroundColor: `${primaryColor}${Math.floor(parseFloat(opacity) * 255).toString(16).padStart(2, '0')}` };
         }
       }
 
@@ -95,7 +122,7 @@ export default function CalendarScreen() {
   };
 
   const selectedDateString = format(selectedDate, 'yyyy-MM-dd');
-  const logsForSelectedDay = MOCK_LOGS[selectedDateString] || [];
+  const logsForSelectedDay = groupedLogs[selectedDateString] || [];
 
   return (
     <ThemedView style={[styles.screen, { backgroundColor }]}>
@@ -148,15 +175,15 @@ export default function CalendarScreen() {
           <ThemedText type="h3" style={styles.detailTitle}>Logs for {format(selectedDate, 'MMMM d')}</ThemedText>
           <View style={styles.logList}>
             {logsForSelectedDay.length > 0 ? (
-              logsForSelectedDay.map((log: LogItem, index: number) => (
+              logsForSelectedDay.map((log: any, index: number) => (
                 <View key={index} style={styles.logItem}>
                   <View style={styles.logItemContent}>
                     <View style={[styles.logIconContainer, { backgroundColor: `${primaryColor}33` /* 20% opacity */ }]}>
-                      <MaterialIcons name={log.icon as any} size={24} color={primaryColor} />
+                      <MaterialIcons name={log.icon || 'edit'} size={24} color={primaryColor} />
                     </View>
-                    <ThemedText style={styles.logName}>{log.name}</ThemedText>
+                    <ThemedText style={styles.logName}>{log.name || log.type}</ThemedText>
                   </View>
-                  <ThemedText style={[styles.logTime, { color: mutedColor }]}>{log.time}</ThemedText>
+                  <ThemedText style={[styles.logTime, { color: mutedColor }]}>{format(new Date(log.created_at), 'p')}</ThemedText>
                 </View>
               ))
             ) : (
@@ -172,14 +199,17 @@ export default function CalendarScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
+    alignItems: 'center', // This will center all direct children horizontally
   },
-
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingBottom: 8,
+    width: '100%',
+    maxWidth: 500,
+    alignSelf: 'center',
   },
   headerButton: {
     width: 48,
@@ -194,6 +224,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     paddingHorizontal: 16,
     paddingVertical: 8,
+    width: '100%',
+    maxWidth: 500,
+    justifyContent: 'center',
+    alignSelf: 'center',
     gap: 8,
   },
   filterChip: {
@@ -210,6 +244,9 @@ const styles = StyleSheet.create({
   calendarContainer: {
     paddingHorizontal: 16,
     paddingBottom: 16,
+    width: '100%',
+    maxWidth: 500,
+    alignSelf: 'center',
   },
   weekDaysContainer: {
     flexDirection: 'row',
@@ -247,6 +284,9 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 16,
     paddingHorizontal: 16,
     paddingBottom: 90, // Space for bottom nav
+    width: '100%',
+    maxWidth: 500,
+    alignSelf: 'center',
   },
   detailTitle: {
     paddingTop: 24,

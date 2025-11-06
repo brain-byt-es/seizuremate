@@ -18,12 +18,13 @@ This document provides a comprehensive overview of the SeizureMate project, serv
 *   **Routing:** Expo Router (file-based routing).
 *   **Authentication:** Clerk (integrated with Supabase).
 *   **Backend & Database:** Supabase (PostgreSQL, authentication, data storage for logs, user profiles, medications).
-*   **Local Database:** Expo-SQLite (for potential offline capabilities or local caching).
-*   **State Management:** React Context API (e.g., `LogsProvider`), `useState` for local component state, `AsyncStorage` for persistent local data (e.g., onboarding status).
+*   **State Management:** React Context API is the primary method for global state.
+    *   `LogsContext`: Manages fetching and adding seizure/symptom/medication logs.
+    *   `OnboardingContext`: Manages the state of the multi-step user onboarding flow.
+    *   `AsyncStorage` is used for persisting simple flags like `hasSeenIntro`.
 *   **Navigation:** React Navigation (underlying Expo Router), Tab-based navigation for core features.
 *   **Styling & Theming:** Custom theming system with light/dark modes, "Calm Mode" for accessibility, defined design tokens (colors, spacing, typography, motion, shadow, radius).
 *   **UI Components:** Themed components (`ThemedText`, `ThemedButton`, `ThemedView`) for consistent application of design system.
-*   **Environment Variables:** Uses `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY`, `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`.
 
 ## 3. Key Features & Flows
 
@@ -31,7 +32,14 @@ This document provides a comprehensive overview of the SeizureMate project, serv
 *   **Authentication:** Secure user authentication via Clerk, with session management integrated with Supabase.
 *   **Logging:** Core feature for tracking seizures, medications, and symptoms. Data is stored in Supabase and managed via `LogsContext`.
 *   **Tab Navigation:** Main application features are accessible via a bottom tab bar: Today, Log, Calendar, Insights, Settings.
-*   **Floating Action Button (FAB):** Prominent button for quick access to log selection modal.
+*   **Data Insights:** The `Insights` screen provides visualizations and statistics based on logged data.
+
+## 4. Architecture & Data Flow
+
+*   **Repository Pattern:** All direct database interactions (Supabase queries) are abstracted into repository classes (e.g., `LogRepository`, `UserRepository`). This decouples the UI and business logic from the database implementation.
+*   **Context for State:** React Contexts (e.g., `LogsContext`) consume these repositories to manage application state and provide data and actions (like `fetchLogs`, `addLog`) to the UI components via custom hooks (`useLogs`).
+*   **Component Responsibility:** UI components are responsible for rendering the UI and handling their own local state (e.g., loading and error states for data they fetch). They call functions from context hooks to trigger data operations.
+*   **Authentication Flow:** A custom hook (`useAuthAndSupabase`) manages the initialization of the Supabase session after Clerk authentication is complete, providing a reliable `isSupabaseReady` signal to the rest of the app.
 
 ## 4. Design System & Brand Guidelines
 
@@ -52,8 +60,9 @@ This document provides a comprehensive overview of the SeizureMate project, serv
 *   **Starting the App:** `npx expo start` (options for Android, iOS, web, Expo Go)
 *   **Platform-specific Runs:** `npm run android`, `npm run ios`, `npm run web`
 *   **Project Reset:** `npm run reset-project` (moves starter code to `app-example`, creates blank `app` directory)
-*   **Linting:** `npm run lint`
+*   **Linting:** `npm run lint` or `eslint . --fix`
 *   **TypeScript:** Strict type checking, path aliases (`@/*` maps to `./src/*`).
+*   **Testing:** Jest and React Native Testing Library are configured. Run tests with `npm test`.
 
 ## 6. AI Interaction Guidelines
 

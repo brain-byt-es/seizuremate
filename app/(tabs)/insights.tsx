@@ -1,7 +1,8 @@
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { useLogs } from '@/constants/LogsContext';
+import { useLogs } from '@/contexts/LogsContext';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { useAuth } from '@clerk/clerk-expo';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useTheme } from '@react-navigation/native';
 import { endOfMonth, endOfWeek, endOfYear, format, getDay, getDaysInMonth, getMonth, isWithinInterval, startOfMonth, startOfWeek, startOfYear } from 'date-fns';
@@ -109,6 +110,7 @@ export default function InsightsScreen() {
   const segmentBackgroundColor = useThemeColor('surfaceAlt');
   const { dark } = useTheme();
   const { logs, fetchLogs } = useLogs();
+  const { isLoaded, isSignedIn } = useAuth();
 
   const shadowStyle = {
     shadowColor: '#000',
@@ -118,12 +120,15 @@ export default function InsightsScreen() {
   };
 
   useEffect(() => {
+    if (!isLoaded || !isSignedIn) {
+      return;
+    }
     // Fetch a year's worth of data for the insights page to work with
     const today = new Date('2024-10-17'); // Using fixed date for consistency with demo
     const firstDay = format(startOfYear(today), 'yyyy-MM-dd');
     const lastDay = format(endOfYear(today), 'yyyy-MM-dd');
-    fetchLogs(firstDay, lastDay);
-  }, [fetchLogs]);
+    fetchLogs(firstDay, lastDay).catch(e => console.error("Failed to fetch logs for insights:", e));
+  }, [fetchLogs, isLoaded, isSignedIn]);
 
   // --- Data Processing Logic ---
   const insightData = useMemo(() => {
@@ -155,9 +160,8 @@ export default function InsightsScreen() {
         break;
     }
 
-    const seizuresInPeriod = Object.entries(logs)
-      .filter(([date]) => isWithinInterval(new Date(date), { start, end }))
-      .flatMap(([, logs]) => logs.filter(log => log.type === 'seizure'));
+    const seizuresInPeriod = logs
+      .filter(log => isWithinInterval(new Date(log.created_at), { start, end }) && log.type === 'seizure');
 
     const totalSeizures = seizuresInPeriod.length;
 
@@ -167,13 +171,12 @@ export default function InsightsScreen() {
 
     // Busiest Day/Month Logic
     const seizuresByTimeUnit: { [key: number]: number } = {};
-    Object.entries(logs)
-      .filter(([date]) => isWithinInterval(new Date(date), { start, end }))
-      .forEach(([date, logs]) => {
-        const d = new Date(date);
+    seizuresInPeriod
+      .forEach(log => {
+        const d = new Date(log.created_at);
         const unit = timeframe === 'Yearly' ? getMonth(d) : getDay(d);
-        const seizureCount = logs.filter(log => log.type === 'seizure').length;
-        if (seizureCount > 0) {
+        const seizureCount = 1; // Each log in seizuresInPeriod is one seizure
+        if (seizureCount > 0) { // This check is a bit redundant now but safe
           seizuresByTimeUnit[unit] = (seizuresByTimeUnit[unit] || 0) + seizureCount;
         }
       });
@@ -198,10 +201,10 @@ export default function InsightsScreen() {
     const durationData = Array(dataPoints).fill(0);
     const durationCounts = Array(dataPoints).fill(0);
 
-    Object.entries(logs)
-      .filter(([date]) => isWithinInterval(new Date(date), { start, end }))
-      .forEach(([date, logs]) => {
-        const d = new Date(date);
+    logs
+      .filter(log => isWithinInterval(new Date(log.created_at), { start, end }))
+      .forEach(log => {
+        const d = new Date(log.created_at);
         let index;
         if (timeframe === 'Yearly') {
           index = getMonth(d);
@@ -212,15 +215,11 @@ export default function InsightsScreen() {
           index = (getDay(d) + 6) % 7; // Monday = 0
         }
 
-        logs.forEach(log => {
-          if (log.type === 'seizure') {
-            if (index < dataPoints) { // Ensure index is within bounds for monthly buckets
-              frequencyData[index]++;
-              durationData[index] += log.duration || 0;
-              durationCounts[index]++;
-            }
-          }
-        });
+        if (log.type === 'seizure' && index < dataPoints) {
+          frequencyData[index]++;
+          durationData[index] += log.duration || 0;
+          durationCounts[index]++;
+        }
       });
 
     const avgDailyDuration = durationData.map((total, i) => durationCounts[i] > 0 ? total / durationCounts[i] : 0);
@@ -314,6 +313,7 @@ export default function InsightsScreen() {
 }
 
 const styles = StyleSheet.create({
+  container: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   screen: {
     flex: 1,
   },

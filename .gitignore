@@ -42,5 +42,8 @@ app-example
 /ios
 /android
 
-# Exclude sensitive information
+# Exclude sensitive brand information
 /brand/*
+
+# AI worksheets
+GEMINI.md
