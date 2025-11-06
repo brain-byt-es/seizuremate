@@ -1,10 +1,9 @@
-/** @type {import('jest').Config} */
-const config = {
+// jest.config.js
+module.exports = {
   preset: 'jest-expo',
+  testEnvironment: 'jsdom',
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   transformIgnorePatterns: [
-    'node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg)',
-  ],
-  setupFilesAfterEnv: ['@testing-library/react-native/extend-expect'],
+    'node_modules/(?!(react-native|@react-native|react-native-svg|expo(nent)?|@expo.*|@react-navigation/.*|react-native-reanimated)/)'
+  ]
 };
-
-module.exports = config;
