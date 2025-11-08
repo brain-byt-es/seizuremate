@@ -1,31 +1,30 @@
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { ThemedButton } from '@/components/ui/themed-button';
+import { Button } from '@/components/nativewindui/Button';
+import { Text } from '@/components/nativewindui/Text';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Dimensions, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { TouchableOpacity, View } from 'react-native';
 
 const tourSteps = [
   {
     title: 'Track with Confidence',
     description: 'A private and simple way to manage your seizure information, medications, and more.',
-    color: '#3B82F6',
+    className: 'bg-primary',
   },
   {
     title: 'Gain Valuable Insights',
     description: 'Visualize your data to understand trends, identify triggers, and see adherence over time.',
-    color: '#7FA08C',
+    className: 'bg-secondary',
   },
   {
     title: 'Share with Your Caregiver',
     description: 'Securely share your logs and progress with a trusted caregiver or family member.',
-    color: '#D5705D',
+    className: 'bg-accent',
   },
   {
     title: 'Your Calm Companion',
     description: 'Designed to be simple, accessible, and calming during stressful times.',
-    color: '#4F4B42',
+    className: 'bg-foreground',
   },
 ];
 
@@ -56,103 +55,44 @@ export default function WelcomeTourScreen() {
   const stepData = tourSteps[currentStep];
 
   return (
-    <ThemedView style={styles.container}>
-      <View style={styles.header}>
+    <View className="flex-1 justify-between p-6 pt-6">
+      <View className="items-end">
         <TouchableOpacity onPress={handleFinishTour}>
-          <ThemedText type="link">Skip</ThemedText>
+          <Text className="text-primary">Skip</Text>
         </TouchableOpacity>
       </View>
 
-      <View style={styles.mainContent}>
-        <View style={[styles.imagePlaceholder, { backgroundColor: stepData.color }]} >
-            <ThemedText type='h1' style={{color: 'white'}}>S</ThemedText>
+      <View className="flex-1 items-center justify-center">
+        <View
+          className={`w-[60vw] h-[60vw] max-w-[240px] max-h-[240px] rounded-3xl mb-12 items-center justify-center ${stepData.className}`}>
+          <Text
+            variant="largeTitle"
+            className="text-background dark:text-foreground font-bold"
+            style={{ color: stepData.className.includes('foreground') ? 'rgb(var(--background))' : undefined }}>
+            S
+          </Text>
         </View>
-        <View style={styles.textContainer}>
-            <ThemedText type='h2' style={styles.title}>{stepData.title}</ThemedText>
-            <ThemedText style={styles.description}>
-                {stepData.description}
-            </ThemedText>
+        <View className="max-w-[320px] items-center">
+          <Text variant="title2" className="mb-3 text-center">
+            {stepData.title}
+          </Text>
+          <Text className="leading-6 text-center">{stepData.description}</Text>
         </View>
       </View>
 
-      <View style={styles.footer}>
-        <View style={styles.dotsContainer}>
+      <View className="pb-6 w-full self-center max-w-md">
+        <View className="flex-row justify-center items-center mb-6 gap-2">
           {Array.from({ length: totalSteps }).map((_, index) => (
             <View
               key={index}
-              style={[
-                styles.dot, // ThemedButton will handle colors
-                index === currentStep ? styles.dotActive : {},
-              ]}
+              className={`h-2.5 rounded-full transition-all ${index === currentStep ? 'w-6 bg-primary' : 'w-2.5 bg-muted'}`}
             />
           ))}
         </View>
-        <ThemedButton
-          title={currentStep === totalSteps - 1 ? "Let's Get Started" : 'Next'}
-          onPress={handleNext}
-        />
+        <Button onPress={handleNext}>
+          <Text>{currentStep === totalSteps - 1 ? "Let's Get Started" : 'Next'}</Text>
+        </Button>
       </View>
-    </ThemedView>
+    </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'space-between',
-    padding: 24,
-    paddingTop: 24,
-  },
-  header: {
-    alignItems: 'flex-end',
-  },
-  mainContent: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  imagePlaceholder: {
-    width: Dimensions.get('window').width * 0.6,
-    height: Dimensions.get('window').width * 0.6,
-    maxWidth: 240, // Add a max width
-    maxHeight: 240, // Add a max height
-    borderRadius: 24,
-    marginBottom: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  textContainer: {
-    maxWidth: 320,
-    textAlign: 'center',
-    alignItems: 'center',
-  },
-  title: {
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  description: {
-    lineHeight: 24,
-    textAlign: 'center',
-  },
-  footer: {
-    paddingBottom: 24,
-    width: '100%',
-    alignSelf: 'center',
-    maxWidth: 448, // max-w-md
-  },
-  dotsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 24,
-    gap: 8,
-  },
-  dot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-  },
-  dotActive: {
-    width: 24,
-  },
-});

@@ -1,12 +1,24 @@
-import { useAuth } from '@clerk/clerk-expo'
-import { Redirect, Stack } from 'expo-router'
+import { LogsProvider } from '@/contexts/LogsContext';
+import '@/global.css';
+import { useAuth } from '@clerk/clerk-expo';
+import 'expo-dev-client';
+import { Redirect, Stack } from 'expo-router';
+import { ActivityIndicator } from 'react-native';
 
-export default function AuthRoutesLayout() {
-  const { isSignedIn } = useAuth()
+export default function AuthLayout() {
+  const { isLoaded, isSignedIn } = useAuth();
 
-  if (isSignedIn) {
-    return <Redirect href={'/(tabs)/today'} />
+  if (!isLoaded) {
+    return <ActivityIndicator />;
   }
 
-  return <Stack />
+  if (!isSignedIn) {
+    return <Redirect href="/(public)/welcome" />;
+  }
+
+  return (
+    <LogsProvider>
+      <Stack screenOptions={{ headerShown: false }} />
+    </LogsProvider>
+  );
 }

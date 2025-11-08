@@ -24,7 +24,7 @@ This document provides a comprehensive overview of the SeizureMate project, serv
     *   `AsyncStorage` is used for persisting simple flags like `hasSeenIntro`.
 *   **Navigation:** React Navigation (underlying Expo Router), Tab-based navigation for core features.
 *   **Styling & Theming:** Custom theming system with light/dark modes, "Calm Mode" for accessibility, defined design tokens (colors, spacing, typography, motion, shadow, radius).
-*   **UI Components:** Themed components (`ThemedText`, `ThemedButton`, `ThemedView`) for consistent application of design system.
+*   **UI Components:** Themed components (`ThemedText`, `ThemedButton`, `ThemedView`) for consistent application of design system. Never ALTER THOSE THEME FILES
 
 ## 3. Key Features & Flows
 
@@ -41,20 +41,52 @@ This document provides a comprehensive overview of the SeizureMate project, serv
 *   **Component Responsibility:** UI components are responsible for rendering the UI and handling their own local state (e.g., loading and error states for data they fetch). They call functions from context hooks to trigger data operations.
 *   **Authentication Flow:** A custom hook (`useAuthAndSupabase`) manages the initialization of the Supabase session after Clerk authentication is complete, providing a reliable `isSupabaseReady` signal to the rest of the app.
 
-## 4. Design System & Brand Guidelines
+## 5. Design System & Brand Guidelines ("Confident Calm")
 
-*   **Philosophy:** "Structure builds trust. Calm builds confidence." Balances clinical clarity with human warmth.
+*   **Philosophy:** “Structure builds trust. Calm builds confidence.” Balances clinical clarity with human warmth.
 *   **Principles:** Precision through simplicity, warmth through restraint, empathy through usability, consistency through systems.
+*   **Core Mood:** Calm, clear, supportive, confident, reassuring, human, gentle.
 *   **Visuals:**
-    *   **Color Palette:** "Confident Calm" palette with primary, accent, secondary, and neutral tones. All colors meet WCAG 2.2 AA or higher contrast standards.
-    *   **Typography:** Primary font: Inter (UI, body), Secondary font: DM Serif Display (headlines). Strict rules for capitalization and no exclamation marks.
-    *   **Grid & Layout:** 8pt modular grid, responsive columns, defined spacing scale, emphasis on whitespace.
-    *   **Motion:** Calm, rhythmic, human motion language with defined timings and easings.
-    *   **Iconography:** 24x24px grid, 1.5px stroke, rounded corners.
-*   **Accessibility:** Comprehensive standards including contrast ratio (4.5:1 minimum), touch target (48px minimum), dynamic type, reduced motion mode, focus rings, screen reader labels, and error prevention. "Accessibility is designed in — not added on."
-*   **Voice & Tone:** Empowering, supportive, informed; empathetic, simple, clear, calm, supportive (never clinical).
+    *   **Color Palette:** "Confident Calm" palette.
+        *   **Primary:** Clarity Blue (`#2F6A8E`) - Used for logos, buttons, navigation.
+        *   **Accent:** Accent Coral (`#D5705D`) - Used for highlights and affirmations.
+        *   **Secondary:** Support Sage (`#7FA08C`) - Used for charts, icons, supportive visuals.
+        *   **Neutrals:** Neutral Sand (`#E9E3DC`), Soft Mist (`#F2F5F5`).
+        *   **Text:** Contrast Taupe (`#554E4A`).
+    *   **Typography:**
+        *   **Primary Font:** Inter (UI, body, data).
+        *   **Secondary Font:** DM Serif Display (headlines, emotional tone).
+        *   **Rules:** Sentence case only, no exclamation marks, no "shouting" (all caps).
+    *   **Grid & Layout:** 8pt modular grid, responsive columns, defined spacing scale (4, 8, 12, 16, 24, 32, 48, 64px), emphasis on whitespace for "emotional breathing room."
+    *   **Motion:** Calm, rhythmic, human motion language. Slow, deliberate transitions (~300-400ms). Motion should express reassurance, not excitement.
+    *   **Iconography:** 24x24px grid, 1.5px stroke, rounded corners. Icons should feel like helpers, not alerts.
+*   **Accessibility:**
+    *   **Standard:** WCAG 2.2 AA.
+    *   **Contrast Ratio:** 4.5:1 minimum.
+    *   **Touch Target:** 48px minimum.
+    *   **Features:** Dynamic Type, "Calm Mode" (disables animations, increases padding), visible focus rings, screen reader labels, and confirmation for destructive actions.
+    *   **Philosophy:** "Accessibility is designed in — not added on."
+*   **Voice & Tone:**
+    *   **Personality:** Empowering, supportive, informed, empathetic, simple, clear, calm. Never clinical to the point of coldness.
+    *   **Golden Rule:** "Every line should feel like a steady hand, not a raised voice."
+    *   **Microcopy:** Buttons are gentle suggestions ("Save Log," not "Submit Data"). Errors lead with safety and clarity. Notifications invite calm action, never pressure.
 
-## 5. Development & Operational Guidelines
+## 6. Content & Strategy
+
+*   **Ideal Client Profile (ICP):**
+    *   **Emma:** 28-year-old professional with focal seizures, seeking understanding.
+    *   **Daniel:** 48-year-old father caring for his son with generalized seizures.
+    *   **Transformation:** From feeling powerless and confused to feeling prepared and confident.
+*   **Offer Stack:**
+    *   **Free Plan:** Core tracking features (seizures, triggers, meds), basic reports.
+    *   **SeizureMate Plus (Premium):** AI insights, advanced analytics, caregiver sync. ($5.99/month or $49/year).
+*   **Launch Strategy:**
+    *   **Philosophy:** "We launch quietly — by listening first." Soft, respectful, human-centered.
+    *   **Phases:** Closed Beta -> Community Soft Launch -> Professional Awareness.
+    *   **Channels:** Focus on partnerships with epilepsy foundations, clinics, and advocacy groups, not paid influencers.
+*   **Content Pillars:** Awareness & Education, Caregiver Connection, Personal Progress, Calm Tech Philosophy, Advocacy & Awareness.
+
+## 7. Development & Operational Guidelines
 
 *   **Installation:** `npm install`
 *   **Starting the App:** `npx expo start` (options for Android, iOS, web, Expo Go)
@@ -64,14 +96,14 @@ This document provides a comprehensive overview of the SeizureMate project, serv
 *   **TypeScript:** Strict type checking, path aliases (`@/*` maps to `./src/*`).
 *   **Testing:** Jest and React Native Testing Library are configured. Run tests with `npm test`.
 
-## 6. AI Interaction Guidelines
+## 8. AI Interaction Guidelines
 
 *   **Purpose:** Ensure every output — from copy to UI — follows SeizureMate’s calm, clinically trusted brand system.
 *   **Style Rules:**
-    *   Use calm, clear, and encouraging tone.
+    *   Use a calm, clear, and encouraging tone.
     *   Maintain accessibility, contrast, and readability.
     *   Use inclusive, non-alarming, and empathetic language.
     *   Prioritize human-first clarity and emotional calm over marketing hype.
-    *   Follow Confident Calm palette and spacing structure for visuals.
+    *   Follow the "Confident Calm" palette and spacing structure for visuals.
     *   All copy should feel reassuring, clear, and human — no exclamation marks.
 *   **Audience:** Individuals managing focal seizures, caregivers, and clinicians seeking calm, data-informed tracking tools.

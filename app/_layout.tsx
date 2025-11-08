@@ -1,15 +1,15 @@
-import { getTheme } from '@/constants/theme';
-import { LogsProvider } from '@/contexts/LogsContext';
-import { OnboardingProvider } from '@/contexts/OnboardingContext';
-import { supabase } from '@/lib/supabase';
-import { ClerkProvider, useAuth } from '@clerk/clerk-expo';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Href, SplashScreen, Stack, useRouter } from 'expo-router';
+import { DisplaySettingsProvider } from '@/contexts/DisplaySettingsContext';
+import { SupabaseProvider } from '@/contexts/SupabaseContext';
+import { useColorScheme } from '@/lib/useColorScheme';
+import { ClerkProvider } from '@clerk/clerk-expo';
+import 'expo-dev-client';
+import { SplashScreen, Stack } from 'expo-router';
+import * as SecureStore from 'expo-secure-store';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useState } from 'react';
-import { useColorScheme } from 'react-native';
+import { useEffect } from 'react';
+import { View } from 'react-native';
 import 'react-native-reanimated';
+import '../global.css';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -20,149 +20,54 @@ if (!clerkPublishableKey) {
   throw new Error('Missing Clerk Publishable Key. Please set EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY in your .env file.');
 }
 
-function RootLayoutNav() {
-  const colorScheme = useColorScheme();
-  const router = useRouter();
-  const { isSignedIn, isLoaded, userId } = useAuth();
+// Cache the Clerk JWT
+const tokenCache = {
+  async getToken(key: string) {
+    try {
+      return SecureStore.getItemAsync(key);
+    } catch {
+      return null;
+    }
+  },
+  async saveToken(key: string, value: string) {
+    try {
+      return SecureStore.setItemAsync(key, value);
+    } catch {}
+  },
+};
 
-  const [isStorageLoading, setStorageLoading] = useState(true);
-  const [hasSeenIntro, setHasSeenIntro] = useState(false);
-  const [hasOnboarded, setHasOnboarded] = useState(false);
-  const { isSupabaseReady } = useAuthAndSupabase();
+function InitialLayout() {
+  const { colorScheme } = useColorScheme();
 
   useEffect(() => {
-    const checkStorage = async () => {
-      try {
-        const seenIntro = await AsyncStorage.getItem('hasSeenIntro');
-        setHasSeenIntro(seenIntro === 'true');
+    // This is now handled in index.tsx after routing decisions are made.
+    // We can hide it here after a delay as a fallback.
+    setTimeout(() => SplashScreen.hideAsync(), 500);
+  }, []);
 
-        if (isLoaded && isSignedIn && isSupabaseReady) {
-          const { data: profile } = await supabase
-            .from('users')
-            .select('id')
-            .eq('provider_user_id', userId)
-            .single();
-          if (profile) {
-            setHasOnboarded(true);
-          }
-        }
-      } catch (e) {
-        console.error('Failed to load data from storage', e);
-      } finally {
-        setStorageLoading(false);
-      }
-    };
-
-    checkStorage();
-  }, [isLoaded, isSignedIn, userId, isSupabaseReady]);
-
-  const appTheme = getTheme(colorScheme ?? 'light');
-
-  const navigationTheme = {
-    ...(colorScheme === 'dark' ? DarkTheme : DefaultTheme),
-    colors: {
-      ...(colorScheme === 'dark' ? DarkTheme.colors : DefaultTheme.colors),
-      background: appTheme.colors.background,
-      primary: appTheme.colors.primary,
-      text: appTheme.colors.text,
-      card: appTheme.colors.surface,
-      border: appTheme.colors.border,
-    },
-  };
-
-  useEffect(() => {
-    if (isStorageLoading || !isLoaded || !isSupabaseReady) {
-      return;
-    }
-
-    let destination: Href | null = null;
-
-    if (!hasSeenIntro) {
-      destination = '/welcome';
-    } else if (!isSignedIn) {
-      destination = '/(auth)/sign-in';
-    } else if (!hasOnboarded) {
-      destination = '/(onboarding)';
-    } else {
-      destination = '/(tabs)/today';
-    }
-
-    if (destination) {
-      router.replace(destination);
-    }
-  }, [isStorageLoading, hasSeenIntro, isLoaded, isSignedIn, hasOnboarded, isSupabaseReady, router]);
-
-  useEffect(() => {
-    if (!isStorageLoading && isLoaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [isStorageLoading, isLoaded]);
-
-  if (isStorageLoading || !isLoaded || !isSupabaseReady) {
-    return null;
-  }
-
+  // Use a View with NativeWind classes for the background.
+  // This will automatically apply the correct light/dark theme from global.css.
   return (
-    <ThemeProvider value={navigationTheme}>
-      <Stack>
-        <Stack.Screen name="(public)" options={{ headerShown: false }} />
-        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-        <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+    <View className="flex-1 bg-background">
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="index" />
+        <Stack.Screen name="(auth)" />
+        <Stack.Screen name="(onboarding)" />
         <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
       </Stack>
       <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
-    </ThemeProvider>
-  );
-}
-
-/**
- * This hook centralizes the logic for setting up the Supabase session.
- * It returns a boolean that is true only when the session is ready.
- */
-export function useAuthAndSupabase() {
-  const { isSignedIn, isLoaded, getToken } = useAuth();
-  const [isSupabaseReady, setSupabaseReady] = useState(false);
-
-  useEffect(() => {
-    const setSupabaseSession = async () => {
-      if (isSignedIn) {
-        const supabaseToken = await getToken({ template: 'supabase' });
-        if (supabaseToken) {
-          await supabase.auth.setSession({
-            access_token: supabaseToken,
-            refresh_token: '', // Clerk handles the refresh token.
-          });
-          setSupabaseReady(true);
-        }
-      } else {
-        supabase.auth.signOut();
-        setSupabaseReady(false);
-      }
-    };
-
-    if (isLoaded) {
-      setSupabaseSession();
-    }
-  }, [isSignedIn, isLoaded, getToken]);
-
-  return { isSupabaseReady };
-}
-
-function InitialLayout() {
-  return (
-    <LogsProvider>
-      <RootLayoutNav />
-    </LogsProvider>
+    </View>
   );
 }
 
 export default function RootLayout() {
   return (
-    <ClerkProvider publishableKey={clerkPublishableKey!}>
-      <OnboardingProvider>
-        <InitialLayout />
-      </OnboardingProvider>
+    <ClerkProvider tokenCache={tokenCache} publishableKey={clerkPublishableKey!}>
+      <DisplaySettingsProvider>
+        <SupabaseProvider>
+          <InitialLayout />
+        </SupabaseProvider>
+      </DisplaySettingsProvider>
     </ClerkProvider>
   );
 }
