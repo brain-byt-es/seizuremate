@@ -1,10 +1,12 @@
+import { Button } from '@/components/nativewindui/Button';
 import { Text } from '@/components/nativewindui/Text';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/nativeui/tabs';
 import { useLogs } from '@/contexts/LogsContext';
 import { useAuth } from '@clerk/clerk-expo';
 import { MaterialIcons } from '@expo/vector-icons';
 import { endOfMonth, endOfWeek, endOfYear, format, getDay, getDaysInMonth, getMonth, isWithinInterval, startOfMonth, startOfWeek, startOfYear } from 'date-fns';
 import React, { ComponentProps, useEffect, useMemo, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient, Path, Stop } from 'react-native-svg';
 
@@ -199,24 +201,20 @@ export default function InsightsScreen() {
       <View className="flex-row items-center justify-between px-4 pb-2" style={{ paddingTop: insets.top }}>
         <View className="w-12" />
         <Text variant="title3" className="flex-1 text-center">Insights & Reports</Text>
-        <TouchableOpacity className="w-12 items-end" onPress={() => Alert.alert('Export', 'Export functionality is not yet implemented.')}>
+        <Button variant="plain" className="w-12 items-end" onPress={() => Alert.alert('Export', 'Export functionality is not yet implemented.')}>
           <Text variant="body" className="font-semibold text-primary">Export</Text>
-        </TouchableOpacity>
+        </Button>
       </View>
 
       {/* Segmented Buttons */}
       <View className="px-4 py-3">
-        <View className="flex-row rounded-xl bg-muted p-1 h-10">
-          {TIMEFRAMES.map((item) => (
-            <TouchableOpacity
-              key={item}
-              className={`flex-1 items-center justify-center rounded-lg ${timeframe === item ? 'bg-card shadow-sm' : ''}`}
-              onPress={() => setTimeframe(item)}
-            >
-              <Text className={`text-sm font-medium ${timeframe !== item ? 'text-muted-foreground' : ''}`}>{item}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+        <Tabs value={timeframe} onValueChange={setTimeframe}>
+          <TabsList>
+            {TIMEFRAMES.map((item) => (
+              <TabsTrigger key={item} value={item}>{item}</TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
       </View>
 
       <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 120 }}>
@@ -260,12 +258,12 @@ export default function InsightsScreen() {
         </View>
 
         {/* Action Button */}
-        <TouchableOpacity className="flex-row items-center justify-center gap-2 rounded-2xl bg-primary py-4 px-6" onPress={() => Alert.alert('Generate Report', 'Report generation is not yet implemented.')}>
+        <Button size="lg" className="flex-row gap-2" onPress={() => Alert.alert('Generate Report', 'Report generation is not yet implemented.')}>
           <MaterialIcons name="download" size={20} className="text-primary-foreground" />
           <Text variant="body" className="font-semibold text-primary-foreground">
             Generate Report
           </Text>
-        </TouchableOpacity>
+        </Button>
       </ScrollView>
     </View>
   );

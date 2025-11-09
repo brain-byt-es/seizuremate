@@ -1,8 +1,10 @@
 import { Text } from '@/components/nativewindui/Text';
 import { ProfileHeader } from '@/components/profile-header';
+import { Card } from '@/components/ui/nativeui/card';
+import { Input } from '@/components/ui/nativeui/input';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React from 'react';
+import React, { useState } from 'react';
 import { SectionList, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -104,6 +106,7 @@ const MOCK_USER = {
 export default function SettingsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const [searchQuery, setSearchQuery] = useState('');
 
   return (
     <View className="flex-1 bg-background">
@@ -115,10 +118,12 @@ export default function SettingsScreen() {
         sections={SECTIONS}
         keyExtractor={(item, index) => item.id + index}
         renderItem={({ item }) => (
-          <TouchableOpacity className="flex-row items-center gap-4 rounded-xl bg-card p-4" onPress={() => router.push(item.href as any)}>
-            <MaterialIcons name={item.icon as any} size={24} className="text-foreground" />
-            <Text className="flex-1 text-base">{item.label}</Text>
-            <MaterialIcons name="chevron-right" size={24} className="text-muted-foreground" />
+          <TouchableOpacity onPress={() => router.push(item.href as any)}>
+            <Card className="flex-row items-center gap-4 p-4">
+              <MaterialIcons name={item.icon as any} size={24} className="text-foreground" />
+              <Text className="flex-1 text-base">{item.label}</Text>
+              <MaterialIcons name="chevron-right" size={24} className="text-muted-foreground" />
+            </Card>
           </TouchableOpacity>
         )}
         renderSectionHeader={({ section: { title } }) => (
@@ -127,7 +132,14 @@ export default function SettingsScreen() {
         ListHeaderComponent={
           <>
             <ProfileHeader user={MOCK_USER} />
-            <View className="px-4 mb-4">{/* Search bar placeholder */}</View>
+            <View className="px-4 mb-4">
+              <Input
+                placeholder="Search settings..."
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                // You can add search icon here later
+              />
+            </View>
           </>
         }
         contentContainerStyle={{ paddingHorizontal: 16 }}

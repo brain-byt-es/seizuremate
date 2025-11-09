@@ -4,7 +4,7 @@ import { FlatList, View } from 'react-native';
 
 import { Button } from '@/components/nativewindui/Button';
 import { Text } from '@/components/nativewindui/Text';
-import { Input } from '@/components/ui/Input';
+import { Input } from '@/components/ui/nativeui/input';
 
 interface Medication {
   id: string;

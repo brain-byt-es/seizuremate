@@ -1,19 +1,20 @@
+import { Button } from '@/components/nativewindui/Button';
 import { Text } from '@/components/nativewindui/Text';
+import { Input } from '@/components/ui/nativeui/input';
 import { useSignUp } from '@clerk/clerk-expo';
 import { Link, useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { ActivityIndicator, Alert, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, TouchableOpacity, View } from 'react-native';
 
 export default function SignUpScreen() {
-  const { signUp, setActive, isLoaded } = useSignUp();
+  const { signUp, isLoaded } = useSignUp();
   const router = useRouter();
 
+  const [name, setName] = useState('');
   const [emailAddress, setEmailAddress] = useState('');
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
   const [loading, setLoading] = useState(false);
-  const [pendingVerification, setPendingVerification] = useState(false);
-  const [code, setCode] = useState('');
 
   const handleSignUp = async () => {
     if (!isLoaded) {
@@ -30,6 +31,7 @@ export default function SignUpScreen() {
       await signUp.create({
         emailAddress,
         password,
+        firstName: name,
       });
 
     } catch (err: any) {
@@ -45,7 +47,7 @@ export default function SignUpScreen() {
     }
     try {
       await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
-      setPendingVerification(true);
+      router.push({ pathname: '/(public)/(auth)/verify-code', params: { email: emailAddress } });
     } catch (err: any) {
       Alert.alert('Sign Up Error', err.errors?.[0]?.longMessage || 'Something went wrong.');
       console.error('Sign up error', JSON.stringify(err, null, 2));
@@ -54,55 +56,6 @@ export default function SignUpScreen() {
     }
   };
 
-  const onVerifyPress = async () => {
-    if (!isLoaded) return;
-    setLoading(true);
-
-    try {
-      const completeSignUp = await signUp.attemptEmailAddressVerification({ code });
-      await setActive({ session: completeSignUp.createdSessionId });
-      router.replace('/(onboarding)');
-    } catch (err: any) {
-      Alert.alert('Verification Error', err.errors[0]?.longMessage || 'Something went wrong.');
-      console.error('Verification error', JSON.stringify(err, null, 2));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (pendingVerification) {
-    return (
-      <View className="flex-1 items-center justify-center bg-background p-5">
-        <View className="w-full max-w-sm">
-          <Text variant="largeTitle" className="mb-2 text-center">Verify Your Email</Text>
-          <Text className="mb-8 text-center text-lg text-muted-foreground">A code has been sent to your email address.</Text>
-          <TextInput
-            className="h-14 w-full rounded-xl border border-border bg-card p-4 text-center text-2xl tracking-[8px] text-foreground"
-            placeholder="------"
-            placeholderTextColor="hsl(var(--muted-foreground))"
-            value={code}
-            onChangeText={setCode}
-            keyboardType="number-pad"
-            maxLength={6}
-          />
-          <TouchableOpacity
-            className="mt-4 h-14 w-full items-center justify-center rounded-xl bg-primary"
-            onPress={onVerifyPress}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="hsl(var(--primary-foreground))" />
-            ) : (
-              <Text className="text-base font-bold text-primary-foreground">
-                Verify Email
-              </Text>
-            )}
-          </TouchableOpacity>
-        </View>
-      </View>
-    );
-  }
-
   return (
     <View className="flex-1 items-center justify-center bg-background p-5">
       <View className="w-full max-w-sm">
@@ -110,8 +63,14 @@ export default function SignUpScreen() {
         <Text className="mb-8 text-center text-lg text-muted-foreground">Create an account to get started.</Text>
 
         <View className="gap-4">
-          <TextInput
-            className="h-14 w-full rounded-xl border border-border bg-card p-4 text-base text-foreground"
+          <Input
+            placeholder="Name"
+            placeholderTextColor="hsl(var(--muted-foreground))"
+            value={name}
+            onChangeText={setName}
+            textContentType="name"
+          />
+          <Input
             placeholder="Email"
             placeholderTextColor="hsl(var(--muted-foreground))"
             value={emailAddress}
@@ -119,16 +78,14 @@ export default function SignUpScreen() {
             autoCapitalize="none"
             keyboardType="email-address"
           />
-          <TextInput
-            className="h-14 w-full rounded-xl border border-border bg-card p-4 text-base text-foreground"
+          <Input
             placeholder="Password"
             placeholderTextColor="hsl(var(--muted-foreground))"
             value={password}
             onChangeText={setPassword}
             secureTextEntry
           />
-          <TextInput
-            className="h-14 w-full rounded-xl border border-border bg-card p-4 text-base text-foreground"
+          <Input
             placeholder="Confirm Password"
             placeholderTextColor="hsl(var(--muted-foreground))"
             value={passwordConfirm}
@@ -137,13 +94,13 @@ export default function SignUpScreen() {
           />
         </View>
 
-        <TouchableOpacity className="mt-6 h-14 w-full items-center justify-center rounded-xl bg-primary" onPress={handleSignUp} disabled={loading}>
-          {loading ? <ActivityIndicator color="hsl(var(--primary-foreground))" /> : <Text className="text-base font-bold text-primary-foreground">Sign Up</Text>}
-        </TouchableOpacity>
+        <Button className="mt-6 w-full" onPress={handleSignUp} disabled={loading}>
+          {loading ? <ActivityIndicator color="hsl(var(--primary-foreground))" /> : <Text>Sign Up</Text>}
+        </Button>
 
         <View className="mt-5 flex-row justify-center">
           <Text className="text-muted-foreground">Already have an account? </Text>
-          <Link href="/(public)/(auth)/sign-in" replace asChild>
+          <Link href="/(public)/(auth)/sign-in" asChild>
             <TouchableOpacity><Text className="font-bold text-primary">Sign In</Text></TouchableOpacity>
           </Link>
         </View>

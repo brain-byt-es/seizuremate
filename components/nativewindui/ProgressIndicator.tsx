@@ -1,13 +1,13 @@
 import { View, type ViewProps } from 'react-native';
 import Animated, {
-  Extrapolation,
-  interpolate,
-  useAnimatedStyle,
-  useDerivedValue,
-  withSpring,
+    Extrapolation,
+    interpolate,
+    useAnimatedStyle,
+    useDerivedValue,
+    withSpring,
 } from 'react-native-reanimated';
 
-import { cn } from '@/lib/cn';
+import { cn } from '@/lib/utils';
 
 const DEFAULT_MAX = 100;
 

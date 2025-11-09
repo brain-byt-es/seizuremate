@@ -1,5 +1,5 @@
 import { Text } from '@/components/nativewindui/Text';
-import { Collapsible } from '@/components/ui/collapsible';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/nativeui/collapsible';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
@@ -111,8 +111,13 @@ export default function FullLogModal() {
 
         {/* Collapsible Medications & Notes */}
         <View className="py-2">
-          <Collapsible title="Medications Taken">
-            <Text className="text-muted-foreground">This section is under development.</Text>
+          <Collapsible>
+            <CollapsibleTrigger>
+              <Text variant="title3">Medications Taken</Text>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <Text className="text-muted-foreground">This section is under development.</Text>
+            </CollapsibleContent>
           </Collapsible>
         </View>
 

@@ -4,7 +4,7 @@ import { View } from 'react-native';
 
 import { Button } from '@/components/nativewindui/Button';
 import { Text } from '@/components/nativewindui/Text';
-import { cn } from '@/lib/cn';
+import { cn } from '@/lib/utils';
 
 export function DatePicker(
   props: React.ComponentProps<typeof DateTimePicker> & {

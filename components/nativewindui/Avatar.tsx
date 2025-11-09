@@ -1,6 +1,6 @@
 import * as AvatarPrimitive from '@rn-primitives/avatar';
 
-import { cn } from '@/lib/cn';
+import { cn } from '@/lib/utils';
 
 function Avatar({ className, ...props }: AvatarPrimitive.RootProps) {
   return (
@@ -30,3 +30,4 @@ function AvatarFallback({ className, ...props }: AvatarPrimitive.FallbackProps) 
 }
 
 export { Avatar, AvatarFallback, AvatarImage };
+

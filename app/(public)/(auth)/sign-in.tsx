@@ -1,10 +1,11 @@
+import { Button } from '@/components/nativewindui/Button';
 import { Text } from '@/components/nativewindui/Text';
+import { Input } from '@/components/ui/nativeui/input';
 import { useSignIn } from '@clerk/clerk-expo';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons'; // For the eye icon
-import { useRouter } from 'expo-router';
+import { Link, useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { ActivityIndicator, Alert, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
-
+import { ActivityIndicator, Alert, TouchableOpacity, View } from 'react-native';
 
 export default function SignInScreen() {
   const { signIn, setActive, isLoaded } = useSignIn();
@@ -52,8 +53,7 @@ export default function SignInScreen() {
           {/* Email TextField */}
           <View className="w-full px-4 py-3">
             <Text className="pb-2 text-base font-medium leading-normal">Email Address</Text>
-            <TextInput
-              className="h-14 w-full rounded-xl border border-border bg-card p-4 text-base leading-normal text-foreground"
+            <Input
               placeholder="Enter your email"
               placeholderTextColor="hsl(var(--muted-foreground))"
               value={emailAddress}
@@ -67,8 +67,8 @@ export default function SignInScreen() {
           <View className="w-full px-4 py-3">
             <Text className="pb-2 text-base font-medium leading-normal">Password</Text>
             <View className="h-14 w-full flex-row items-center rounded-xl border border-border bg-card">
-              <TextInput
-                className="flex-1 p-4 pr-2 text-base leading-normal text-foreground"
+              <Input
+                className="flex-1 border-0 bg-transparent p-4 pr-2 text-base leading-normal text-foreground"
                 placeholder="Enter your password"
                 placeholderTextColor="hsl(var(--muted-foreground))"
                 value={password}
@@ -89,94 +89,64 @@ export default function SignInScreen() {
           </View>
 
           {/* Forgot Password */}
-          <View style={styles.forgotPasswordContainer}>
-            <TouchableOpacity onPress={() => Alert.alert('Forgot Password', 'This feature is not yet implemented.')}>
-              <Text className="text-sm leading-normal text-foreground underline">Forgot Password?</Text>
-            </TouchableOpacity>
+          <View className="w-full items-end px-4 pt-1 pb-3">
+            <Link href="/(public)/(auth)/forgot-password" asChild>
+              <TouchableOpacity>
+                <Text className="text-sm leading-normal text-foreground underline">
+                  Forgot Password?
+                </Text>
+              </TouchableOpacity>
+            </Link>
           </View>
         </View>
 
         {/* ButtonGroup */}
         <View className="w-full flex-col gap-3 px-4 py-3">
-          <TouchableOpacity
-            className="h-14 min-w-[84px] items-center justify-center rounded-xl bg-primary px-5"
-            onPress={handleSignIn}
-            disabled={loading}
-          >
+          <Button onPress={handleSignIn} disabled={loading} className="w-full">
             {loading ? (
               <ActivityIndicator color="hsl(var(--primary-foreground))" />
             ) : (
-              <Text className="text-base font-bold leading-normal tracking-wide text-primary-foreground">
-                Sign In
-              </Text>
+              <Text>Sign In</Text>
             )}
-          </TouchableOpacity>
+          </Button>
 
-          <View style={styles.orSeparatorContainer}>
+          <View className="relative my-3 flex-row items-center justify-center">
             <View className="absolute w-full border-t border-border" />
             <Text className="bg-background px-2 text-sm text-foreground">or</Text>
           </View>
 
           {/* Continue with Google */}
-          <TouchableOpacity
-            className="h-14 min-w-[84px] flex-row items-center justify-center gap-3 rounded-xl border border-border bg-card px-5"
+          <Button
+            variant="secondary"
             onPress={() => Alert.alert('Social Login', 'Google login not yet implemented.')}
+            className="w-full flex-row gap-3"
           >
             {/* Placeholder for Google Icon */}
             <View className="h-6 w-6 items-center justify-center">
               <Text className="text-foreground">G</Text>
             </View>
-            <Text className="text-base font-bold leading-normal tracking-wide text-foreground">
-              Continue with Google
-            </Text>
-          </TouchableOpacity>
+            <Text>Continue with Google</Text>
+          </Button>
 
           {/* Continue with Apple */}
-          <TouchableOpacity
-            className="h-14 min-w-[84px] flex-row items-center justify-center gap-3 rounded-xl border border-border bg-card px-5"
-            onPress={() => Alert.alert('Social Login', 'Apple login not yet implemented.')}
-          >
+          <Button variant="secondary" onPress={() => Alert.alert('Social Login', 'Apple login not yet implemented.')} className="w-full flex-row gap-3">
             {/* Placeholder for Apple Icon */}
             <View className="h-6 w-6 items-center justify-center">
               <Text className="text-foreground">A</Text>
             </View>
-            <Text className="text-base font-bold leading-normal tracking-wide text-foreground">
-              Continue with Apple
-            </Text>
-          </TouchableOpacity>
+            <Text>Continue with Apple</Text>
+          </Button>
 
-          <TouchableOpacity
-            className="h-14 min-w-[84px] items-center justify-center rounded-xl bg-transparent px-5"
-            onPress={() => router.push('/(auth)/sign-up')}
-          >
-            <Text className="text-base font-bold leading-normal tracking-wide text-foreground">
-              Create Account
-            </Text>
-          </TouchableOpacity>
+          <View className="mt-2 flex-row justify-center">
+            <Text className="text-muted-foreground">Don&apos;t have an account? </Text>
+            <Link href="/(public)/(auth)/sign-up" asChild>
+              <TouchableOpacity>
+                <Text className="font-bold text-primary">Create Account</Text>
+              </TouchableOpacity>
+            </Link>
+          </View>
         </View>
-
-        {/* Footer Text */}
-        <Text className="mt-8 px-4 text-center text-xs">
-          By continuing, you agree to our <Text className="text-primary">Terms of Service</Text> and <Text className="text-primary">Privacy Policy</Text>.
-        </Text>
       </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  forgotPasswordContainer: {
-    width: '100%',
-    paddingHorizontal: 16, // px-4
-    paddingTop: 4, // pt-1
-    paddingBottom: 12, // pb-3
-    alignItems: 'flex-end', // text-right
-  },
-  orSeparatorContainer: {
-    position: 'relative',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginVertical: 12, // my-3
-  },
-});

@@ -3,8 +3,8 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { Platform, Pressable, PressableProps, View, ViewStyle } from 'react-native';
 
 import { TextClassContext } from '@/components/nativewindui/Text';
-import { cn } from '@/lib/cn';
 import { useColorScheme } from '@/lib/useColorScheme';
+import { cn } from '@/lib/utils';
 import { COLORS } from '@/theme/colors';
 import { withOpacity } from '@/theme/with-opacity';
 
@@ -139,3 +139,4 @@ function Button({
 
 export { Button, buttonTextVariants, buttonVariants };
 export type { ButtonProps };
+
